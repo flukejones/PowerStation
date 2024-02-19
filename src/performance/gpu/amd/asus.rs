@@ -1,4 +1,5 @@
 use std::path::Path;
+use udev::{Enumerator};
 
 use crate::performance::gpu::tdp::{TDPDevice, TDPResult, TDPError};
 
@@ -14,36 +15,40 @@ use rog_profiles::error::ProfileError;
 /// Implementation of asusd with a fallback to asus-wmi sysfs
 /// See https://www.kernel.org/doc/html/v6.8-rc4/admin-guide/abi-testing.html#abi-sys-devices-platform-platform-ppt-apu-sppt
 pub struct ASUS {
-    
+    ppt_pl1_spl: String,
+    ppt_pl2_sppt: String,
 }
 
 impl ASUS {
 
     /// test if we are in an asus system with asus-wmi loaded
     pub fn new() -> Option<Self> {
-        
+        //let context = Context::new().expect("Failed to create udev context");
+        let mut enumerator = Enumerator::new(/*&context*/).expect("Failed to create enumerator");
+        enumerator.match_subsystem("platform").expect("Failed to add subsystem filter");
+        enumerator.match_sysname("asus-nb-wmi").expect("Failed to add sysname filter");
 
-        match RogDbusClientBlocking::new() {
-            Ok((dbus, _)) => {
-                let supported_properties = dbus.proxies().platform().supported_properties().unwrap();
-                let supported_interfaces = dbus.proxies().platform().supported_interfaces().unwrap();
+        for device in enumerator.scan_devices().expect("Failed to scan devices") {
+            let ppt_pl1_spl = device.property_value("ppt_pl1_spl");
+            let ppt_pl2_sppt = device.property_value("ppt_pl2_sppt");
 
-                Some(Self {
-                        
-                })
-            },
-            Err(err) => {
-                let asus_wmi_path = Path::new("");
+            if let (Some(ppt_pl1_spl), Some(ppt_pl2_sppt)) = (ppt_pl1_spl, ppt_pl2_sppt) {
+                let ppt_pl1_spl_str = ppt_pl1_spl.to_str().unwrap().to_string();
+                let ppt_pl2_sppt_str = ppt_pl2_sppt.to_str().unwrap().to_string();
 
-                if asus_wmi_path.exists() {
-                    Some(Self {
-                        
-                    })
-                } else {
-                    None
-                }
+                log::info!("Found asus-wmi module");
+                log::info!("ASUS ppt_pl1_spl: {}", ppt_pl1_spl_str);
+                log::info!("ASUS ppt_pl2_sppt: {}", ppt_pl2_sppt_str);
+
+                return Some(Self {
+                    ppt_pl1_spl: ppt_pl1_spl_str,
+                    ppt_pl2_sppt: ppt_pl2_sppt_str,
+                });
             }
         }
+
+        log::info!("Module asus-wmi not found");
+        None
     }
 
 }
@@ -58,7 +63,7 @@ impl TDPDevice for ASUS {
                 dbus.proxies().platform().ppt_apu_sppt();
             },
             Err(err) => {
-
+                log::warn!("Unable to use asusd to read tdp, asus-wmi interface will be used")
             }
         }
 

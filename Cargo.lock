@@ -62,7 +62,7 @@ dependencies = [
  "serde_derive",
  "systemd-zbus",
  "tokio",
- "udev",
+ "udev 0.7.0",
  "zbus",
 ]
 
@@ -513,7 +513,7 @@ version = "5.0.8-RC3"
 source = "git+https://gitlab.com/asus-linux/asusctl.git#9ec02cd7275a3080eb6e99328152cdaaf77507ae"
 dependencies = [
  "log",
- "udev",
+ "udev 0.7.0",
 ]
 
 [[package]]
@@ -1288,6 +1288,7 @@ dependencies = [
  "rog_profiles",
  "simple_logger",
  "tokio",
+ "udev 0.8.0",
  "zbus",
  "zbus_macros",
 ]
@@ -1469,7 +1470,7 @@ dependencies = [
  "serde",
  "serde_derive",
  "typeshare",
- "udev",
+ "udev 0.7.0",
  "zbus",
 ]
 
@@ -1483,7 +1484,7 @@ dependencies = [
  "serde",
  "serde_derive",
  "typeshare",
- "udev",
+ "udev 0.7.0",
  "zbus",
 ]
 
@@ -1908,6 +1909,18 @@ version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4ebdbbd670373442a12fe9ef7aeb53aec4147a5a27a00bbc3ab639f08f48191a"
 dependencies = [
+ "libc",
+ "libudev-sys",
+ "pkg-config",
+]
+
+[[package]]
+name = "udev"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "50051c6e22be28ee6f217d50014f3bc29e81c20dc66ff7ca0d5c5226e1dcc5a1"
+dependencies = [
+ "io-lifetimes",
  "libc",
  "libudev-sys",
  "pkg-config",
