@@ -11,6 +11,8 @@ use crate::performance::gpu::interface::GPUIface;
 use crate::performance::gpu::{amd, tdp::TDPDevice};
 use crate::performance::gpu::interface::{GPUError, GPUResult};
 
+use super::asus::ASUS;
+
 #[derive(Debug, Clone)]
 pub struct AMDGPU {
     pub name: String,
@@ -37,18 +39,28 @@ impl GPUIface for AMDGPU {
 
     /// Returns the TDP DBus interface for this GPU
     fn get_tdp_interface(&self) -> Option<Arc<Mutex<dyn TDPDevice>>> {
-        // TODO: if asusd is present, or asus-wmi is present this is where it is bound to the GPU
+        // if asusd is present, or asus-wmi is present this is where it is bound to the GPU
         match self.class.as_str() {
-            "integrated" => Some(
-                Arc::new(
-                    Mutex::new(
-                        amd::tdp::TDP::new(
-                            self.path.clone(),
-                            self.device_id.clone()
+            "integrated" => match ASUS::new() {
+                Some(asus_tdp) => {
+                    log::info!("Using asus interface for TDP control");
+                    Some(Arc::new(Mutex::new(asus_tdp)))
+                },
+                None => {
+                    log::info!("Using ryzenadj (generic) interface for TDP control");
+                    Some(
+                        Arc::new(
+                            Mutex::new(
+                                amd::tdp::TDP::new(
+                                    self.path.clone(),
+                                    self.device_id.clone()
+                                )
+                            )
                         )
                     )
-                )
-            ),
+                }
+            }
+            ,
             _ => None,
         }
     }
