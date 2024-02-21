@@ -1,5 +1,5 @@
 use std::path::Path;
-use udev::{Enumerator};
+use udev::{Enumerator, Device};
 
 use crate::performance::gpu::tdp::{TDPDevice, TDPResult, TDPError};
 
@@ -15,14 +15,15 @@ use rog_profiles::error::ProfileError;
 /// Implementation of asusd with a fallback to asus-wmi sysfs
 /// See https://www.kernel.org/doc/html/v6.8-rc4/admin-guide/abi-testing.html#abi-sys-devices-platform-platform-ppt-apu-sppt
 pub struct ASUS {
-    ppt_pl1_spl: String,
-    ppt_pl2_sppt: String,
+    //ppt_pl1_spl: String,
+    //ppt_pl2_sppt: String,
 }
 
 impl ASUS {
 
     /// test if we are in an asus system with asus-wmi loaded
     pub fn new() -> Option<Self> {
+        /*
         //let context = Context::new().expect("Failed to create udev context");
         let mut enumerator = Enumerator::new(/*&context*/).expect("Failed to create enumerator");
         enumerator.match_subsystem("platform").expect("Failed to add subsystem filter");
@@ -46,9 +47,20 @@ impl ASUS {
                 });
             }
         }
+        */
 
-        log::info!("Module asus-wmi not found");
-        None
+        match Device::from_syspath(std::path::Path::new("/sys/devices/platform/asus-nb-wmi/")) {
+            Ok(udev) => {
+                log::info!("Module asus-wmi WAS found");
+                Some(Self {})
+            },
+            Err(err) => {
+                log::info!("Module asus-wmi not found");
+                None
+            }
+        }
+
+        
     }
 
 }
