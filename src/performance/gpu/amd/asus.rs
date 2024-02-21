@@ -57,18 +57,27 @@ impl TDPDevice for ASUS {
     fn tdp(&self) -> TDPResult<f64> {
         match RogDbusClientBlocking::new() {
             Ok((dbus, _)) => {
+                
                 let supported_properties = dbus.proxies().platform().supported_properties().unwrap();
                 let supported_interfaces = dbus.proxies().platform().supported_interfaces().unwrap();
+                
 
-                dbus.proxies().platform().ppt_apu_sppt();
+                match dbus.proxies().platform().ppt_apu_sppt() {
+                    Ok(result) => {
+                        log::info!("Initial ppt_apu_sppt: {}", result);
+                        Ok(result as f64)
+                    },
+                    Err(err) => {
+                        log::warn!("Error fetching ppt_apu_sppt: {}", err);
+                        Err(TDPError::FailedOperation(format!("")))
+                    }
+                }
             },
             Err(err) => {
-                log::warn!("Unable to use asusd to read tdp, asus-wmi interface will be used")
+                log::warn!("Unable to use asusd to read tdp, asus-wmi interface will be used");
+                Err(TDPError::FailedOperation(format!("")))
             }
         }
-
-        
-        todo!()
     }
 
     fn set_tdp(&mut self, value: f64) -> TDPResult<()> {
