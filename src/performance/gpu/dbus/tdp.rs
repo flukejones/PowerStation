@@ -1,14 +1,16 @@
 use std::sync::Arc;
-use std::sync::Mutex;
+use tokio::sync::Mutex;
 use zbus::fdo::Error;
 use zbus::fdo;
 use zbus_macros::dbus_interface;
 
+use crate::performance::gpu::tdp::TDPDevice;
+use crate::performance::gpu::tdp::TDPDevices;
 use crate::performance::gpu::tdp::TDPError;
-use crate::performance::gpu::tdp::{TDPDevice, TDPResult};
+use crate::performance::gpu::tdp::TDPResult;
 
 pub struct GPUTDPDBusIface {
-    dev: Arc<Mutex<dyn TDPDevice>>
+    dev: Arc<Mutex<TDPDevices>>
 }
 
 impl Into<fdo::Error> for TDPError {
@@ -23,7 +25,7 @@ impl Into<fdo::Error> for TDPError {
 }
 
 impl GPUTDPDBusIface {
-    pub fn new(dev: Arc<Mutex<impl TDPDevice>>) -> GPUTDPDBusIface {
+    pub fn new(dev: Arc<Mutex<TDPDevices>>) -> GPUTDPDBusIface {
         GPUTDPDBusIface {
             dev
         }
@@ -35,18 +37,19 @@ impl GPUTDPDBusIface {
 
     /// Get the currently set TDP value
     #[dbus_interface(property, name = "TDP")]
-    fn tdp(&self) -> fdo::Result<f64> {
-        match self.dev.lock() {
-            Ok(lck) => {
-                match lck.tdp() {
-                    TDPResult::Ok(result) => Ok(result),
-                    TDPResult::Err(err) => Err(err.into())
-                }
-            },
-            Err(err) => {
-                Err(Error::Failed(format!("Unable to lock mutex: {}", err)))
-            }
+    async fn tdp(&self) -> fdo::Result<f64> {
+        let lock = self.dev.lock().await;
+        if let Some(dev) = lock.asus() {
+            return dev.tdp().await; // TODO: error conversion
         }
+        if let Some(dev) = lock.amd() {
+            return dev.tdp().await; // TODO: error conversion
+        }
+        if let Some(dev) = lock.intel() {
+            return dev.tdp().await; // TODO: error conversion
+        }
+
+        Err(Error::Failed(format!("Some other error")))
     }
 
     /// Sets the given TDP value
