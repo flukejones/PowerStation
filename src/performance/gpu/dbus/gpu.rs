@@ -29,11 +29,11 @@ impl Into<fdo::Error> for GPUError {
 #[derive(Clone)]
 pub struct GPUDBusInterface {
     connector_paths: Vec<String>,
-    gpu_obj: Arc<Mutex<dyn GPUIface>>
+    gpu_obj: Arc<Mutex<impl GPUIface>>
 }
 
 impl GPUDBusInterface {
-    pub fn new(gpu: Arc<Mutex<dyn GPUIface>>) -> Self {
+    pub fn new(gpu: Arc<Mutex<impl GPUIface>>) -> Self {
         Self {
             gpu_obj: gpu,
             connector_paths: vec![]

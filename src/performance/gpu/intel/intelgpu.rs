@@ -1,10 +1,10 @@
 use std::{
     fs::{self, OpenOptions},
     io::Write,
-    sync::{
-        Arc, Mutex
-    }
+    sync::Arc
 };
+
+use tokio::sync::Mutex;
 
 use crate::constants::PREFIX;
 use crate::performance::gpu::interface::GPUIface;
@@ -37,7 +37,7 @@ impl GPUIface for IntelGPU {
     }
 
     /// Returns the TDP DBus interface for this GPU
-    fn get_tdp_interface(&self) -> Option<Arc<Mutex<dyn TDPDevice>>> {
+    fn get_tdp_interface(&self) -> Option<Arc<Mutex<impl TDPDevice>>> {
         match self.class.as_str() {
             "integrated" => Some(
                 Arc::new(

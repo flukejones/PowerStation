@@ -23,7 +23,7 @@ impl Into<fdo::Error> for TDPError {
 }
 
 impl GPUTDPDBusIface {
-    pub fn new(dev: Arc<Mutex<dyn TDPDevice>>) -> GPUTDPDBusIface {
+    pub fn new(dev: Arc<Mutex<impl TDPDevice>>) -> GPUTDPDBusIface {
         GPUTDPDBusIface {
             dev
         }
